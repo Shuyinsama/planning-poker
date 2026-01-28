@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Session, Participant, CardValue } from '@/types';
 import { storage } from '@/lib/storage';
-import { useWebSocket } from './useWebSocket';
-import type { WebSocketMessage } from '@/lib/api';
 
 const PRESENCE_TIMEOUT = 30000; // 30 seconds
 const HEARTBEAT_INTERVAL = 5000; // 5 seconds
@@ -11,9 +9,8 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
   const [session, setSession] = useState<Session | null>(null);
   const heartbeatRef = useRef<number | undefined>(undefined);
   const cleanupRef = useRef<number | undefined>(undefined);
-  const { wsClient, isBackendAvailable, addMessageHandler, removeMessageHandler } = useWebSocket();
 
-  // Clean up inactive participants (localStorage fallback only)
+  // Clean up inactive participants
   const cleanupInactiveParticipants = useCallback((currentSession: Session) => {
     const now = Date.now();
     const activeParticipants = currentSession.participants.filter(
@@ -29,7 +26,7 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
     return currentSession;
   }, []);
 
-  // Update current user's presence (localStorage fallback only)
+  // Update current user's presence
   const updatePresence = useCallback(() => {
     if (!sessionId || !currentUserId) return;
 
@@ -48,47 +45,9 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
     setSession(cleanedSession);
   }, [sessionId, currentUserId, cleanupInactiveParticipants]);
 
-  // Handle WebSocket messages
-  useEffect(() => {
-    if (!isBackendAvailable || !sessionId) return;
-
-    const handleMessage = (message: WebSocketMessage) => {
-      console.log('useSession - WebSocket message:', message);
-      
-      switch (message.type) {
-        case 'sessionCreated':
-        case 'sessionJoined':
-        case 'participantJoined':
-        case 'participantUpdated':
-        case 'cardsRevealed':
-        case 'votingReset':
-        case 'sessionUpdate':
-          setSession(message.data);
-          break;
-        case 'error':
-          console.error('WebSocket error:', message.data);
-          break;
-      }
-    };
-
-    addMessageHandler(handleMessage);
-
-    return () => {
-      removeMessageHandler(handleMessage);
-    };
-  }, [isBackendAvailable, sessionId, addMessageHandler, removeMessageHandler]);
-
-  // Set up presence heartbeat and polling (localStorage fallback)
+  // Set up presence heartbeat and polling
   useEffect(() => {
     if (sessionId) {
-      // If using backend, no need for localStorage polling
-      if (isBackendAvailable) {
-        console.log('useSession - Using WebSocket backend');
-        return;
-      }
-
-      console.log('useSession - Using localStorage fallback');
-
       // Update presence FIRST for current user before any cleanup
       if (currentUserId) {
         const currentSession = storage.getSession(sessionId);
@@ -140,81 +99,53 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
         // The presence timeout mechanism will naturally clean up inactive participants
       };
     }
-  }, [sessionId, currentUserId, updatePresence, cleanupInactiveParticipants, isBackendAvailable]);
+  }, [sessionId, currentUserId, updatePresence, cleanupInactiveParticipants]);
 
   const updateSession = (updatedSession: Session) => {
-    // Optimistic update
     setSession(updatedSession);
-    
-    // Fallback to localStorage if backend not available
-    if (!isBackendAvailable) {
-      storage.saveSession(updatedSession);
-    }
+    storage.saveSession(updatedSession);
   };
 
   const selectCard = (participantId: string, card: CardValue) => {
     if (!session) return;
 
-    // Use WebSocket if available
-    if (isBackendAvailable && wsClient) {
-      wsClient.updateParticipant(session.id, participantId, card, true);
-    } else {
-      // Fallback to localStorage
-      const updatedSession = {
-        ...session,
-        participants: session.participants.map((p) =>
-          p.id === participantId ? { ...p, selectedCard: card, isReady: true } : p
-        ),
-      };
-      updateSession(updatedSession);
-    }
+    const updatedSession = {
+      ...session,
+      participants: session.participants.map((p) =>
+        p.id === participantId ? { ...p, selectedCard: card, isReady: true } : p
+      ),
+    };
+    updateSession(updatedSession);
   };
 
   const revealCards = () => {
     if (!session) return;
-    
-    // Use WebSocket if available
-    if (isBackendAvailable && wsClient) {
-      wsClient.revealCards(session.id);
-    } else {
-      // Fallback to localStorage
-      updateSession({ ...session, isRevealed: true });
-    }
+    updateSession({ ...session, isRevealed: true });
   };
 
   const resetVoting = () => {
     if (!session) return;
 
-    // Use WebSocket if available
-    if (isBackendAvailable && wsClient) {
-      wsClient.resetVoting(session.id);
-    } else {
-      // Fallback to localStorage
-      const updatedSession = {
-        ...session,
-        isRevealed: false,
-        participants: session.participants.map((p) => ({
-          ...p,
-          selectedCard: undefined,
-          isReady: false,
-        })),
-      };
-      updateSession(updatedSession);
-    }
+    const updatedSession = {
+      ...session,
+      isRevealed: false,
+      participants: session.participants.map((p) => ({
+        ...p,
+        selectedCard: undefined,
+        isReady: false,
+      })),
+    };
+    updateSession(updatedSession);
   };
 
   const addParticipant = (participant: Participant) => {
     if (!session) return;
 
-    // For WebSocket, this should happen via joinSession message
-    // This is primarily for localStorage fallback
-    if (!isBackendAvailable) {
-      const updatedSession = {
-        ...session,
-        participants: [...session.participants, participant],
-      };
-      updateSession(updatedSession);
-    }
+    const updatedSession = {
+      ...session,
+      participants: [...session.participants, participant],
+    };
+    updateSession(updatedSession);
   };
 
   return {
@@ -223,6 +154,5 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
     revealCards,
     resetVoting,
     addParticipant,
-    isBackendAvailable,
   };
 }

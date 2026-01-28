@@ -11,7 +11,13 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "cdk:install": "cd cdk && npm install",
+    "cdk:build": "cd cdk && npm run build",
+    "cdk:synth": "cd cdk && npm run synth",
+    "cdk:deploy": "cd cdk && npm run deploy",
+    "cdk:destroy": "cd cdk && npm run destroy",
+    "cdk:diff": "cd cdk && npm run diff"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.1.18",
