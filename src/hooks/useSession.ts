@@ -45,6 +45,7 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
     setSession(cleanedSession);
   }, [sessionId, currentUserId, cleanupInactiveParticipants]);
 
+  // Initial load of session
   useEffect(() => {
     if (sessionId) {
       const loadedSession = storage.getSession(sessionId);

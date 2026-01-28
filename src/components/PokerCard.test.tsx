@@ -48,9 +48,9 @@ describe('PokerCard', () => {
   });
 
   it('should apply disabled styling when disabled', () => {
-    render(<PokerCard value="21" isSelected={false} onClick={() => {}} disabled={true} />);
+    render(<PokerCard value="20" isSelected={false} onClick={() => {}} disabled={true} />);
     
-    const card = screen.getByText('21').closest('div');
+    const card = screen.getByText('20').closest('div');
     expect(card).toHaveClass('opacity-50', 'cursor-not-allowed');
   });
 
