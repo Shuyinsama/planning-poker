@@ -6,7 +6,7 @@ import { ParticipantList } from '@/components/ParticipantList';
 import type { CardValue } from '@/types';
 import { useSession } from '@/hooks/useSession';
 
-const CARD_VALUES: CardValue[] = ['0', '1', '2', '3', '5', '8', '13', '21', '34', '55', '89', '?', '☕'];
+const CARD_VALUES: CardValue[] = ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '☕'];
 
 interface SessionViewProps {
   sessionId: string;
