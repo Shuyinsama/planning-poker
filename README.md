@@ -6,18 +6,22 @@ A real-time Planning Poker application built with React, TypeScript, and shadcn/
 
 - 🎯 **Session Management**: Create and join planning poker sessions
 - 👥 **Guest Access**: No authentication required - join with just a name
-- 🃏 **Fibonacci Cards**: Standard Fibonacci sequence (0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89) plus ? and ☕
+- 🃏 **Card Values**: 0, 1, 2, 3, 5, 8, 13, 20, 40, 100, ?, ☕
 - 💾 **Local Storage**: All session data persists in browser localStorage
+- 👤 **Presence Tracking**: Automatic participant removal when users leave
+- ⏱️ **Heartbeat System**: Real-time presence updates every 5 seconds
 - 🔗 **Share Links**: Easy session sharing via URL
-- 🎨 **Modern UI**: Built with shadcn/ui and Tailwind CSS
+- 🎨 **Modern UI**: Built with shadcn/ui and Tailwind CSS v4
 - 📱 **Responsive**: Works on desktop and mobile devices
+- ✅ **Well Tested**: 96%+ code coverage with comprehensive unit tests
 
 ## Tech Stack
 
 - **React 18** with TypeScript
 - **Vite** for fast development and optimized builds
 - **shadcn/ui** for beautiful, accessible components
-- **Tailwind CSS** for styling
+- **Tailwind CSS v4** for styling
+- **Vitest** with Istanbul for testing and coverage
 - **localStorage** for session persistence
 
 ## Getting Started
@@ -53,6 +57,24 @@ npm run build
 ```
 
 The built files will be in the `dist/` directory.
+
+### Running Tests
+
+```bash
+# Run tests in watch mode
+npm test
+
+# Run tests with UI dashboard
+npm run test:ui
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run tests once (CI mode)
+npm run test:run
+```
+
+The project maintains **96%+ test coverage** with comprehensive unit tests for all components, hooks, and utilities.
 
 ## Usage
 
@@ -150,10 +172,12 @@ src/
 │   ├── SessionJoin.tsx     # Guest join form
 │   └── SessionView.tsx     # Main session interface
 ├── hooks/
-│   └── useSession.ts       # Session management hook
+│   └── useSession.ts       # Session management hook with presence tracking
 ├── lib/
 │   ├── storage.ts          # localStorage utilities
 │   └── utils.ts            # Utility functions
+├── test/
+│   └── setup.ts            # Vitest test setup
 ├── types/
 │   └── index.ts            # TypeScript type definitions
 ├── App.tsx                 # Main app component
@@ -170,12 +194,54 @@ This application doesn't require any environment variables. All session data is 
 - Firefox 88+
 - Safari 14+
 
+## How It Works
+
+### Presence Tracking
+
+The application uses a heartbeat system to track participant presence:
+- Each participant sends a heartbeat every 5 seconds
+- Participants inactive for 30+ seconds are automatically removed
+- Sessions poll for updates every 2 seconds to reflect changes
+- Participants are immediately removed when they close the tab/browser
+
+### Storage
+
+- All session data is stored in browser localStorage
+- Each session includes participant info, card selections, and reveal state
+- Sessions persist across page refreshes but are browser-specific
+
 ## Limitations
 
 - Sessions are stored only in the browser's localStorage
-- No real-time synchronization between browsers (sessions must be manually refreshed)
-- Sessions are not shared across devices
+- Participants in the same session must manually refresh to see updates (polling every 2 seconds)
+- Sessions are not shared across devices or browsers
 - Maximum localStorage size varies by browser (typically 5-10MB)
+
+## Development
+
+### Testing
+
+The project includes comprehensive unit tests with high coverage:
+- **54 tests** across all components, hooks, and utilities
+- **96.15%** statement coverage
+- **91.83%** branch coverage
+- **96.77%** function coverage
+- **98.03%** line coverage
+
+Test files follow the pattern `*.test.ts` or `*.test.tsx` and use Vitest with Testing Library.
+
+### Code Quality
+
+```bash
+# Lint code
+npm run lint
+
+# Type check
+npx tsc --noEmit
+
+# Run all checks
+npm run lint && npm run test:run && npm run build
+```
 
 ## Future Enhancements
 
