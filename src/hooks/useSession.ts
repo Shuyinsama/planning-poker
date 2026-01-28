@@ -45,9 +45,10 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
     setSession(cleanedSession);
   }, [sessionId, currentUserId, cleanupInactiveParticipants]);
 
-  // Initial load of session
+  // Set up presence heartbeat and polling
   useEffect(() => {
     if (sessionId) {
+      // Load initial session state
       const loadedSession = storage.getSession(sessionId);
       if (loadedSession) {
         const cleanedSession = cleanupInactiveParticipants(loadedSession);
@@ -56,19 +57,16 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
           storage.saveSession(cleanedSession);
         }
       }
-    }
-  }, [sessionId, cleanupInactiveParticipants]);
 
-  // Set up presence heartbeat
-  useEffect(() => {
-    if (sessionId && currentUserId) {
-      // Initial presence update
-      updatePresence();
+      if (currentUserId) {
+        // Initial presence update for current user
+        updatePresence();
 
-      // Send heartbeat every 5 seconds
-      heartbeatRef.current = window.setInterval(updatePresence, HEARTBEAT_INTERVAL);
+        // Send heartbeat every 5 seconds
+        heartbeatRef.current = window.setInterval(updatePresence, HEARTBEAT_INTERVAL);
+      }
 
-      // Poll for changes every 2 seconds
+      // Poll for changes every 2 seconds (for all users)
       cleanupRef.current = window.setInterval(() => {
         const currentSession = storage.getSession(sessionId);
         if (currentSession) {
@@ -82,16 +80,18 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
         if (heartbeatRef.current) clearInterval(heartbeatRef.current);
         if (cleanupRef.current) clearInterval(cleanupRef.current);
 
-        // Mark user as inactive when leaving
-        const currentSession = storage.getSession(sessionId);
-        if (currentSession) {
-          const updatedSession = {
-            ...currentSession,
-            participants: currentSession.participants.filter(
-              (p) => p.id !== currentUserId
-            ),
-          };
-          storage.saveSession(updatedSession);
+        // Mark user as inactive when leaving (only if we have a userId)
+        if (currentUserId) {
+          const currentSession = storage.getSession(sessionId);
+          if (currentSession) {
+            const updatedSession = {
+              ...currentSession,
+              participants: currentSession.participants.filter(
+                (p) => p.id !== currentUserId
+              ),
+            };
+            storage.saveSession(updatedSession);
+          }
         }
       };
     }
