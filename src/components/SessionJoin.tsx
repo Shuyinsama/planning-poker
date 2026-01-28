@@ -34,7 +34,10 @@ export function SessionJoin({ sessionId, onJoined }: SessionJoinProps) {
       participants: [...session.participants, newParticipant],
     };
 
+    console.log('SessionJoin - Before save, session:', session);
+    console.log('SessionJoin - After update, participants:', updatedSession.participants);
     storage.saveSession(updatedSession);
+    console.log('SessionJoin - Saved to storage');
     onJoined(userId);
   };
 

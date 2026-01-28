@@ -50,8 +50,11 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
     if (sessionId) {
       // Load initial session state
       const loadedSession = storage.getSession(sessionId);
+      console.log('useSession - Initial load for sessionId:', sessionId);
+      console.log('useSession - Loaded session:', loadedSession);
       if (loadedSession) {
         const cleanedSession = cleanupInactiveParticipants(loadedSession);
+        console.log('useSession - After cleanup, participants:', cleanedSession.participants);
         setSession(cleanedSession);
         if (cleanedSession !== loadedSession) {
           storage.saveSession(cleanedSession);
@@ -69,6 +72,7 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
       // Poll for changes every 2 seconds (for all users)
       cleanupRef.current = window.setInterval(() => {
         const currentSession = storage.getSession(sessionId);
+        console.log('useSession - Polling update, participants:', currentSession?.participants.length || 0);
         if (currentSession) {
           const cleanedSession = cleanupInactiveParticipants(currentSession);
           setSession(cleanedSession);

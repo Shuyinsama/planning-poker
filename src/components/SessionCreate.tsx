@@ -36,6 +36,8 @@ export function SessionCreate({ onSessionCreated }: SessionCreateProps) {
     };
 
     storage.saveSession(newSession);
+    console.log('SessionCreate - Created session:', newSession);
+    console.log('SessionCreate - Participants:', newSession.participants);
     onSessionCreated(sessionId, userId);
   };
 
