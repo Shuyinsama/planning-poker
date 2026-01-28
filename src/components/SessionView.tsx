@@ -14,7 +14,7 @@ interface SessionViewProps {
 }
 
 export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
-  const { session, selectCard, revealCards, resetVoting } = useSession(sessionId);
+  const { session, selectCard, revealCards, resetVoting } = useSession(sessionId, currentUserId);
   const [shareLink] = useState(`${window.location.origin}?join=${sessionId}`);
 
   if (!session) {
@@ -72,7 +72,6 @@ export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
                       key={value}
                       value={value}
                       isSelected={currentParticipant?.selectedCard === value}
-                      isRevealed={session.isRevealed}
                       onClick={() => handleCardSelect(value)}
                       disabled={session.isRevealed}
                     />

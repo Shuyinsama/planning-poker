@@ -5,12 +5,11 @@ import type { CardValue } from '@/types';
 interface PokerCardProps {
   value: CardValue;
   isSelected: boolean;
-  isRevealed?: boolean;
   onClick: () => void;
   disabled?: boolean;
 }
 
-export function PokerCard({ value, isSelected, isRevealed = false, onClick, disabled = false }: PokerCardProps) {
+export function PokerCard({ value, isSelected, onClick, disabled = false }: PokerCardProps) {
   return (
     <Card
       className={cn(

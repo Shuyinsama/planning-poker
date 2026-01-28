@@ -26,6 +26,7 @@ export function SessionJoin({ sessionId, onJoined }: SessionJoinProps) {
       id: userId,
       name: userName,
       isReady: false,
+      lastSeen: Date.now(),
     };
 
     const updatedSession = {

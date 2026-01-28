@@ -28,6 +28,7 @@ export function SessionCreate({ onSessionCreated }: SessionCreateProps) {
           id: userId,
           name: userName,
           isReady: false,
+          lastSeen: Date.now(),
         },
       ],
       isRevealed: false,

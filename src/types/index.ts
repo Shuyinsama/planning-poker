@@ -5,6 +5,7 @@ export interface Participant {
   name: string;
   selectedCard?: CardValue;
   isReady: boolean;
+  lastSeen: number;
 }
 
 export interface Session {
