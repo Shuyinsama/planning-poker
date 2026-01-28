@@ -20,7 +20,7 @@ export function PokerCard({ value, isSelected, isRevealed = false, onClick, disa
       )}
       onClick={disabled ? undefined : onClick}
     >
-      <span className="text-3xl font-bold">{isRevealed || isSelected ? value : '🂠'}</span>
+      <span className="text-3xl font-bold">{value}</span>
     </Card>
   );
 }

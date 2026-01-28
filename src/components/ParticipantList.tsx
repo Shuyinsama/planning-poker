@@ -22,7 +22,7 @@ export function ParticipantList({ participants, isRevealed }: ParticipantListPro
               <span className="font-medium">{participant.name}</span>
               <div className="flex items-center gap-2">
                 {participant.isReady && !isRevealed && (
-                  <span className="text-sm text-muted-foreground">✓ Ready</span>
+                  <span className="text-sm text-muted-foreground">🂠 Ready</span>
                 )}
                 {isRevealed && participant.selectedCard && (
                   <span className="text-lg font-bold">{participant.selectedCard}</span>
