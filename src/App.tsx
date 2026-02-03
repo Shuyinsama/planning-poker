@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { SessionCreate } from '@/components/SessionCreate';
 import { SessionJoin } from '@/components/SessionJoin';
 import { SessionView } from '@/components/SessionView';
+import { MenuBar } from '@/components/MenuBar';
 import { storage } from '@/lib/storage';
 
 type AppState = 'create' | 'join' | 'session';
@@ -84,19 +85,15 @@ function App() {
     saveUserState(sessionId, newUserId);
   };
 
-  if (appState === 'create') {
-    return <SessionCreate onSessionCreated={handleSessionCreated} />;
-  }
-
-  if (appState === 'join' && sessionId) {
-    return <SessionJoin sessionId={sessionId} onJoined={handleJoined} />;
-  }
-
-  if (appState === 'session' && sessionId && userId) {
-    return <SessionView sessionId={sessionId} currentUserId={userId} />;
-  }
-
-  return <div>Loading...</div>;
+  return (
+    <>
+      <MenuBar />
+      {appState === 'create' && <SessionCreate onSessionCreated={handleSessionCreated} />}
+      {appState === 'join' && sessionId && <SessionJoin sessionId={sessionId} onJoined={handleJoined} />}
+      {appState === 'session' && sessionId && userId && <SessionView sessionId={sessionId} currentUserId={userId} />}
+      {appState !== 'create' && appState !== 'join' && appState !== 'session' && <div>Loading...</div>}
+    </>
+  );
 }
 
 export default App;

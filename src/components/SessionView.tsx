@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PokerCard } from '@/components/PokerCard';
 import { ParticipantList } from '@/components/ParticipantList';
 import type { CardValue } from '@/types';
 import { useSession } from '@/hooks/useSession';
+import { useSettings } from '@/contexts/SettingsContext';
 
 const CARD_VALUES: CardValue[] = ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '☕'];
 
@@ -15,14 +16,22 @@ interface SessionViewProps {
 
 export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
   const { session, selectCard, revealCards, resetVoting } = useSession(sessionId, currentUserId);
+  const { settings } = useSettings();
   const [shareLink] = useState(`${window.location.origin}?join=${sessionId}`);
+
+  const currentParticipant = session?.participants.find((p) => p.id === currentUserId);
+  const allReady = session?.participants.every((p) => p.isReady) ?? false;
+
+  // Auto-reveal when all participants have voted (if setting is enabled)
+  useEffect(() => {
+    if (session && settings.autoRevealWhenAllVoted && allReady && !session.isRevealed && session.participants.length > 0) {
+      revealCards();
+    }
+  }, [session, settings.autoRevealWhenAllVoted, allReady, revealCards]);
 
   if (!session) {
     return <div>Loading session...</div>;
   }
-
-  const currentParticipant = session.participants.find((p) => p.id === currentUserId);
-  const allReady = session.participants.every((p) => p.isReady);
 
   const handleCardSelect = (value: CardValue) => {
     if (currentParticipant && !session.isRevealed) {
