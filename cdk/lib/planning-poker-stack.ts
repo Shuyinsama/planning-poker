@@ -1,9 +1,9 @@
 import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
-import * as logs from 'aws-cdk-lib/aws-logs';
 import { WebSocketLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import * as path from 'path';
 
@@ -38,84 +38,68 @@ export class PlanningPokerStack extends cdk.Stack {
       CONNECTIONS_TABLE: connectionsTable.tableName,
     };
 
-    // Lambda function for $connect
-    const connectHandler = new lambda.Function(this, 'ConnectHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'connect.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda/handlers'), {
-        bundling: {
-          image: lambda.Runtime.NODEJS_20_X.bundlingImage,
-          command: [
-            'bash', '-c',
-            'cp -r . /asset-output && cd /asset-output && npm install --production'
-          ],
-        },
-      }),
+    // Common NodejsFunction options
+    const nodejsFunctionProps = {
+      runtime: Runtime.NODEJS_20_X,
       environment: lambdaEnvironment,
       timeout: cdk.Duration.seconds(30),
+      bundling: {
+        externalModules: [], // Bundle all dependencies
+      },
+    };
+
+    // Lambda function for $connect
+    const connectHandler = new NodejsFunction(this, 'ConnectHandler', {
+      ...nodejsFunctionProps,
+      entry: path.join(__dirname, '../lambda/handlers/connect.ts'),
     });
 
     // Lambda function for $disconnect
-    const disconnectHandler = new lambda.Function(this, 'DisconnectHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'disconnect.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-      environment: lambdaEnvironment,
-      timeout: cdk.Duration.seconds(30),
+    const disconnectHandler = new NodejsFunction(this, 'DisconnectHandler', {
+      ...nodejsFunctionProps,
+      entry: path.join(__dirname, '../lambda/handlers/disconnect.ts'),
     });
 
     // Lambda function for createSession
-    const createSessionHandler = new lambda.Function(this, 'CreateSessionHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'handlers/createSession.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-      environment: lambdaEnvironment,
-      timeout: cdk.Duration.seconds(30),
+    const createSessionHandler = new NodejsFunction(this, 'CreateSessionHandler', {
+      ...nodejsFunctionProps,
+      entry: path.join(__dirname, '../lambda/handlers/createSession.ts'),
     });
 
     // Lambda function for joinSession
-    const joinSessionHandler = new lambda.Function(this, 'JoinSessionHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'handlers/joinSession.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-      environment: lambdaEnvironment,
-      timeout: cdk.Duration.seconds(30),
+    const joinSessionHandler = new NodejsFunction(this, 'JoinSessionHandler', {
+      ...nodejsFunctionProps,
+      entry: path.join(__dirname, '../lambda/handlers/joinSession.ts'),
     });
 
     // Lambda function for updateParticipant
-    const updateParticipantHandler = new lambda.Function(this, 'UpdateParticipantHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'handlers/updateParticipant.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-      environment: lambdaEnvironment,
-      timeout: cdk.Duration.seconds(30),
+    const updateParticipantHandler = new NodejsFunction(this, 'UpdateParticipantHandler', {
+      ...nodejsFunctionProps,
+      entry: path.join(__dirname, '../lambda/handlers/updateParticipant.ts'),
     });
 
     // Lambda function for revealCards
-    const revealCardsHandler = new lambda.Function(this, 'RevealCardsHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'handlers/revealCards.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-      environment: lambdaEnvironment,
-      timeout: cdk.Duration.seconds(30),
+    const revealCardsHandler = new NodejsFunction(this, 'RevealCardsHandler', {
+      ...nodejsFunctionProps,
+      entry: path.join(__dirname, '../lambda/handlers/revealCards.ts'),
     });
 
     // Lambda function for resetVoting
-    const resetVotingHandler = new lambda.Function(this, 'ResetVotingHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'handlers/resetVoting.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-      environment: lambdaEnvironment,
-      timeout: cdk.Duration.seconds(30),
+    const resetVotingHandler = new NodejsFunction(this, 'ResetVotingHandler', {
+      ...nodejsFunctionProps,
+      entry: path.join(__dirname, '../lambda/handlers/resetVoting.ts'),
     });
 
     // Lambda function for heartbeat
-    const heartbeatHandler = new lambda.Function(this, 'HeartbeatHandler', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      handler: 'handlers/heartbeat.handler',
-      code: lambda.Code.fromAsset(path.join(__dirname, '../lambda')),
-      environment: lambdaEnvironment,
-      timeout: cdk.Duration.seconds(30),
+    const heartbeatHandler = new NodejsFunction(this, 'HeartbeatHandler', {
+      ...nodejsFunctionProps,
+      entry: path.join(__dirname, '../lambda/handlers/heartbeat.ts'),
+    });
+
+    // Lambda function for sendReaction
+    const sendReactionHandler = new NodejsFunction(this, 'SendReactionHandler', {
+      ...nodejsFunctionProps,
+      entry: path.join(__dirname, '../lambda/handlers/sendReaction.ts'),
     });
 
     // Grant DynamoDB permissions
@@ -127,6 +111,7 @@ export class PlanningPokerStack extends cdk.Stack {
     sessionsTable.grantReadWriteData(revealCardsHandler);
     sessionsTable.grantReadWriteData(resetVotingHandler);
     sessionsTable.grantReadWriteData(heartbeatHandler);
+    sessionsTable.grantReadWriteData(sendReactionHandler);
 
     connectionsTable.grantReadWriteData(connectHandler);
     connectionsTable.grantReadWriteData(disconnectHandler);
@@ -136,6 +121,7 @@ export class PlanningPokerStack extends cdk.Stack {
     connectionsTable.grantReadWriteData(revealCardsHandler);
     connectionsTable.grantReadWriteData(resetVotingHandler);
     connectionsTable.grantReadWriteData(heartbeatHandler);
+    connectionsTable.grantReadWriteData(sendReactionHandler);
 
     // WebSocket API
     const webSocketApi = new apigatewayv2.WebSocketApi(this, 'PlanningPokerWebSocketApi', {
@@ -174,6 +160,10 @@ export class PlanningPokerStack extends cdk.Stack {
       integration: new WebSocketLambdaIntegration('HeartbeatIntegration', heartbeatHandler),
     });
 
+    webSocketApi.addRoute('sendReaction', {
+      integration: new WebSocketLambdaIntegration('SendReactionIntegration', sendReactionHandler),
+    });
+
     // WebSocket Stage
     const webSocketStage = new apigatewayv2.WebSocketStage(this, 'ProductionStage', {
       webSocketApi,
@@ -185,13 +175,13 @@ export class PlanningPokerStack extends cdk.Stack {
     const webSocketEndpoint = `https://${webSocketApi.apiId}.execute-api.${this.region}.amazonaws.com/${webSocketStage.stageName}`;
     
     [disconnectHandler, createSessionHandler, joinSessionHandler, updateParticipantHandler, 
-     revealCardsHandler, resetVotingHandler, heartbeatHandler].forEach(handler => {
+     revealCardsHandler, resetVotingHandler, heartbeatHandler, sendReactionHandler].forEach(handler => {
       handler.addEnvironment('WEBSOCKET_ENDPOINT', webSocketEndpoint);
     });
 
     // Grant Lambda functions permission to manage WebSocket connections
     [disconnectHandler, createSessionHandler, joinSessionHandler, updateParticipantHandler,
-     revealCardsHandler, resetVotingHandler, heartbeatHandler].forEach(handler => {
+     revealCardsHandler, resetVotingHandler, heartbeatHandler, sendReactionHandler].forEach(handler => {
       handler.addToRolePolicy(new cdk.aws_iam.PolicyStatement({
         actions: ['execute-api:ManageConnections'],
         resources: [

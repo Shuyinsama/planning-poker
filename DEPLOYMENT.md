@@ -55,7 +55,7 @@ npm run cdk:deploy
 
 This will:
 - Create 2 DynamoDB tables (Sessions and Connections)
-- Deploy 8 Lambda functions
+- Deploy 9 Lambda functions
 - Set up API Gateway WebSocket API
 - Configure IAM roles and permissions
 
@@ -78,7 +78,13 @@ PlanningPokerStack.ConnectionsTableName = PlanningPokerStack-ConnectionsTable...
 
 ### Update .env.production
 
-Edit `.env.production` and add your WebSocket URL:
+Copy the example file and add your WebSocket URL:
+
+```bash
+cp .env.production.example .env.production
+```
+
+Then edit `.env.production` and add your WebSocket URL:
 
 ```bash
 VITE_WEBSOCKET_URL=wss://YOUR-WEBSOCKET-URL-HERE

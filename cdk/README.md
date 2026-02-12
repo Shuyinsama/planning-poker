@@ -5,7 +5,7 @@ This directory contains the AWS CDK infrastructure code for the Planning Poker a
 ## Architecture
 
 - **API Gateway WebSocket API**: Real-time bidirectional communication
-- **AWS Lambda**: 8 serverless functions handling WebSocket routes
+- **AWS Lambda**: 9 serverless functions handling WebSocket routes
 - **DynamoDB**: 2 tables (Sessions and Connections) with on-demand billing
 - **IAM**: Least-privilege roles and policies
 
@@ -129,7 +129,8 @@ cdk/
 │   │   ├── updateParticipant.ts
 │   │   ├── revealCards.ts
 │   │   ├── resetVoting.ts
-│   │   └── heartbeat.ts
+│   │   ├── heartbeat.ts
+│   │   └── sendReaction.ts
 │   ├── utils/                  # Shared utilities
 │   │   ├── dynamodb.ts
 │   │   └── broadcast.ts
