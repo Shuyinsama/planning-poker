@@ -4,12 +4,21 @@ export type FibonacciCardValue = '0' | '1' | '2' | '3' | '5' | '8' | '13' | '20'
 export type TShirtCardValue = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | '?' | '☕';
 export type CardValue = FibonacciCardValue | TShirtCardValue;
 
+export interface Reaction {
+  id: string;
+  emoji: string;
+  fromUserId: string;
+  toUserId: string;
+  timestamp: number;
+}
+
 export interface Participant {
   id: string;
   name: string;
   selectedCard?: CardValue;
   isReady: boolean;
   lastSeen: number;
+  reactions?: Reaction[];
 }
 
 export interface Session {
@@ -64,4 +73,11 @@ export interface ResetVotingMessage {
 export interface HeartbeatMessage {
   sessionId: string;
   participantId: string;
+}
+
+export interface SendReactionMessage {
+  sessionId: string;
+  fromUserId: string;
+  toUserId: string;
+  emoji: string;
 }

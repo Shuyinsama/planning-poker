@@ -15,6 +15,8 @@ vi.mock('@/lib/storage', () => ({
 
 describe('SessionJoin', () => {
   const mockOnJoined = vi.fn();
+  const mockOnNewSession = vi.fn();
+  const mockOnJoinDifferent = vi.fn();
   const mockSession: Session = {
     id: 'session-123',
     name: 'Test Session',
@@ -24,6 +26,12 @@ describe('SessionJoin', () => {
     currentUserId: 'user-1',
     votingType: 'fibonacci',
   };
+  const defaultProps = {
+    sessionId: 'session-123',
+    onJoined: mockOnJoined,
+    onNewSession: mockOnNewSession,
+    onJoinDifferent: mockOnJoinDifferent,
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -32,7 +40,7 @@ describe('SessionJoin', () => {
   });
 
   it('should render join form', () => {
-    render(<SessionJoin sessionId="session-123" onJoined={mockOnJoined} />);
+    render(<SessionJoin {...defaultProps} />);
     
     expect(screen.getByText(/join planning session/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/enter your name/i)).toBeInTheDocument();
@@ -40,7 +48,7 @@ describe('SessionJoin', () => {
   });
 
   it('should have disabled button when name is empty', () => {
-    render(<SessionJoin sessionId="session-123" onJoined={mockOnJoined} />);
+    render(<SessionJoin {...defaultProps} />);
     
     const button = screen.getByRole('button', { name: /join session/i });
     expect(button).toBeDisabled();
@@ -48,7 +56,7 @@ describe('SessionJoin', () => {
 
   it('should enable button when name is entered', async () => {
     const user = userEvent.setup();
-    render(<SessionJoin sessionId="session-123" onJoined={mockOnJoined} />);
+    render(<SessionJoin {...defaultProps} />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), 'Jane');
     
@@ -58,7 +66,7 @@ describe('SessionJoin', () => {
 
   it('should join session and call callback', async () => {
     const user = userEvent.setup();
-    render(<SessionJoin sessionId="session-123" onJoined={mockOnJoined} />);
+    render(<SessionJoin {...defaultProps} />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), 'Jane');
     await user.click(screen.getByRole('button', { name: /join session/i }));
@@ -70,7 +78,7 @@ describe('SessionJoin', () => {
 
   it('should join session on Enter key', async () => {
     const user = userEvent.setup();
-    render(<SessionJoin sessionId="session-123" onJoined={mockOnJoined} />);
+    render(<SessionJoin {...defaultProps} />);
     
     const input = screen.getByPlaceholderText(/enter your name/i);
     await user.type(input, 'Jane{Enter}');
@@ -84,7 +92,7 @@ describe('SessionJoin', () => {
     vi.mocked(storage.getSession).mockReturnValue(null);
     
     const user = userEvent.setup();
-    render(<SessionJoin sessionId="invalid-session" onJoined={mockOnJoined} />);
+    render(<SessionJoin {...defaultProps} sessionId="invalid-session" />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), 'Jane');
     await user.click(screen.getByRole('button', { name: /join session/i }));
@@ -97,7 +105,7 @@ describe('SessionJoin', () => {
 
   it('should not join with only whitespace in name', async () => {
     const user = userEvent.setup();
-    render(<SessionJoin sessionId="session-123" onJoined={mockOnJoined} />);
+    render(<SessionJoin {...defaultProps} />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), '   ');
     
@@ -115,7 +123,7 @@ describe('SessionJoin', () => {
     vi.mocked(storage.getSession).mockReturnValue(sessionWithParticipants);
     
     const user = userEvent.setup();
-    render(<SessionJoin sessionId="session-123" onJoined={mockOnJoined} />);
+    render(<SessionJoin {...defaultProps} />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), 'Bob');
     await user.click(screen.getByRole('button', { name: /join session/i }));

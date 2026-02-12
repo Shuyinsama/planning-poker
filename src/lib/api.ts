@@ -9,6 +9,7 @@ export type WebSocketMessageType =
   | 'cardsRevealed'
   | 'votingReset'
   | 'sessionUpdate'
+  | 'reactionSent'
   | 'error';
 
 export interface WebSocketMessage {
@@ -148,6 +149,10 @@ export class WebSocketClient {
 
   resetVoting(sessionId: string): void {
     this.send('resetVoting', { sessionId });
+  }
+
+  sendReaction(sessionId: string, fromUserId: string, toUserId: string, emoji: string): void {
+    this.send('sendReaction', { sessionId, fromUserId, toUserId, emoji });
   }
 
   private startHeartbeat(): void {

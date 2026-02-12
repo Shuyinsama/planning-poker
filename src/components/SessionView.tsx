@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { PokerCard } from '@/components/PokerCard';
 import { ParticipantList } from '@/components/ParticipantList';
 import type { CardValue } from '@/types';
@@ -11,12 +12,15 @@ import { useSettings } from '@/contexts/SettingsContext';
 interface SessionViewProps {
   sessionId: string;
   currentUserId: string;
+  onNewSession: () => void;
+  onJoinDifferent: (sessionId?: string) => void;
 }
 
-export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
-  const { session, selectCard, revealCards, resetVoting } = useSession(sessionId, currentUserId);
+export function SessionView({ sessionId, currentUserId, onNewSession, onJoinDifferent }: SessionViewProps) {
+  const { session, selectCard, revealCards, resetVoting, sendReaction } = useSession(sessionId, currentUserId);
   const { settings } = useSettings();
   const [shareLink] = useState(`${window.location.origin}?join=${sessionId}`);
+  const [joinSessionCode, setJoinSessionCode] = useState('');
 
   const cardValues = useMemo(() => {
     if (!session) return FIBONACCI_VALUES;
@@ -47,6 +51,16 @@ export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
     navigator.clipboard.writeText(shareLink);
   };
 
+  const handleJoinDifferentSession = () => {
+    if (joinSessionCode.trim()) {
+      onJoinDifferent(joinSessionCode.trim());
+    }
+  };
+
+  const handleReaction = (toUserId: string, emoji: string) => {
+    sendReaction(toUserId, emoji);
+  };
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -56,7 +70,7 @@ export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
             <CardDescription>Session ID: {session.id}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 mb-4">
               <Button onClick={copyShareLink} variant="outline">
                 Copy Share Link
               </Button>
@@ -68,6 +82,21 @@ export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
                   New Round
                 </Button>
               )}
+              <Button onClick={onNewSession} variant="destructive">
+                New Session
+              </Button>
+            </div>
+            <div className="flex gap-2 items-center">
+              <Input
+                placeholder="Enter session code to join"
+                value={joinSessionCode}
+                onChange={(e) => setJoinSessionCode(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleJoinDifferentSession()}
+                className="max-w-xs"
+              />
+              <Button onClick={handleJoinDifferentSession} variant="outline" disabled={!joinSessionCode.trim()}>
+                Join Different Session
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -95,7 +124,12 @@ export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
           </div>
 
           <div>
-            <ParticipantList participants={session.participants} isRevealed={session.isRevealed} />
+            <ParticipantList
+              participants={session.participants}
+              isRevealed={session.isRevealed}
+              currentUserId={currentUserId}
+              onReaction={handleReaction}
+            />
           </div>
         </div>
       </div>

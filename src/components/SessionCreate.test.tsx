@@ -13,6 +13,11 @@ vi.mock('@/lib/storage', () => ({
 
 describe('SessionCreate', () => {
   const mockOnSessionCreated = vi.fn();
+  const mockOnJoinExisting = vi.fn();
+  const defaultProps = {
+    onSessionCreated: mockOnSessionCreated,
+    onJoinExisting: mockOnJoinExisting,
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -20,7 +25,7 @@ describe('SessionCreate', () => {
   });
 
   it('should render form inputs', () => {
-    render(<SessionCreate onSessionCreated={mockOnSessionCreated} />);
+    render(<SessionCreate {...defaultProps} />);
     
     expect(screen.getByPlaceholderText(/enter your name/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/sprint 24 planning/i)).toBeInTheDocument();
@@ -28,7 +33,7 @@ describe('SessionCreate', () => {
   });
 
   it('should have disabled button when fields are empty', () => {
-    render(<SessionCreate onSessionCreated={mockOnSessionCreated} />);
+    render(<SessionCreate {...defaultProps} />);
     
     const button = screen.getByRole('button', { name: /create session/i });
     expect(button).toBeDisabled();
@@ -36,7 +41,7 @@ describe('SessionCreate', () => {
 
   it('should enable button when both fields are filled', async () => {
     const user = userEvent.setup();
-    render(<SessionCreate onSessionCreated={mockOnSessionCreated} />);
+    render(<SessionCreate {...defaultProps} />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), 'John');
     await user.type(screen.getByPlaceholderText(/sprint 24 planning/i), 'Sprint 1');
@@ -47,7 +52,7 @@ describe('SessionCreate', () => {
 
   it('should create session and call callback', async () => {
     const user = userEvent.setup();
-    render(<SessionCreate onSessionCreated={mockOnSessionCreated} />);
+    render(<SessionCreate {...defaultProps} />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), 'John');
     await user.type(screen.getByPlaceholderText(/sprint 24 planning/i), 'Sprint 1');
@@ -59,7 +64,7 @@ describe('SessionCreate', () => {
 
   it('should create session on Enter key in session name field', async () => {
     const user = userEvent.setup();
-    render(<SessionCreate onSessionCreated={mockOnSessionCreated} />);
+    render(<SessionCreate {...defaultProps} />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), 'John');
     const sessionInput = screen.getByPlaceholderText(/sprint 24 planning/i);
@@ -71,7 +76,7 @@ describe('SessionCreate', () => {
 
   it('should not create session with only whitespace', async () => {
     const user = userEvent.setup();
-    render(<SessionCreate onSessionCreated={mockOnSessionCreated} />);
+    render(<SessionCreate {...defaultProps} />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), '   ');
     await user.type(screen.getByPlaceholderText(/sprint 24 planning/i), '   ');
@@ -85,7 +90,7 @@ describe('SessionCreate', () => {
     // userId is generated first, then sessionId in the implementation
     vi.mocked(storage.generateId).mockReturnValueOnce('user-456').mockReturnValueOnce('session-123');
     
-    render(<SessionCreate onSessionCreated={mockOnSessionCreated} />);
+    render(<SessionCreate {...defaultProps} />);
     
     await user.type(screen.getByPlaceholderText(/enter your name/i), 'John');
     await user.type(screen.getByPlaceholderText(/sprint 24 planning/i), 'Sprint 1');
