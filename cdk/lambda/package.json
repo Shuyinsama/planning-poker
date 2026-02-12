@@ -1,0 +1,10 @@
+{
+  "name": "planning-poker-lambdas",
+  "version": "1.0.0",
+  "description": "Lambda functions for Planning Poker WebSocket API",
+  "dependencies": {
+    "@aws-sdk/client-apigatewaymanagementapi": "^3.716.0",
+    "@aws-sdk/client-dynamodb": "^3.716.0",
+    "@aws-sdk/lib-dynamodb": "^3.716.0"
+  }
+}
