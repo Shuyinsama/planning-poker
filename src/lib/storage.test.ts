@@ -49,6 +49,7 @@ describe('storage', () => {
         participants: [],
         isRevealed: false,
         currentUserId: 'user1',
+        votingType: 'fibonacci',
       };
       localStorage.setItem('planning-poker-sessions', JSON.stringify({
         'session1': mockSession,
@@ -68,6 +69,7 @@ describe('storage', () => {
         participants: [],
         isRevealed: false,
         currentUserId: 'user1',
+        votingType: 'fibonacci',
       };
 
       storage.saveSession(mockSession);
@@ -84,6 +86,7 @@ describe('storage', () => {
         participants: [],
         isRevealed: false,
         currentUserId: 'user1',
+        votingType: 'fibonacci',
       };
 
       storage.saveSession(mockSession);
@@ -103,6 +106,7 @@ describe('storage', () => {
         participants: [],
         isRevealed: false,
         currentUserId: 'user1',
+        votingType: 'fibonacci',
       };
 
       const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
@@ -128,6 +132,7 @@ describe('storage', () => {
         participants: [],
         isRevealed: false,
         currentUserId: 'user1',
+        votingType: 'fibonacci',
       };
 
       storage.saveSession(mockSession);

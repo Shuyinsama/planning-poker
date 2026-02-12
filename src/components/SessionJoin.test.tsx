@@ -22,6 +22,7 @@ describe('SessionJoin', () => {
     participants: [],
     isRevealed: false,
     currentUserId: 'user-1',
+    votingType: 'fibonacci',
   };
 
   beforeEach(() => {

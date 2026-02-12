@@ -10,7 +10,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
   try {
     const body: CreateSessionMessage = JSON.parse(event.body || '{}');
-    const { sessionName, userName, userId } = body;
+    const { sessionName, userName, userId, votingType = 'fibonacci' } = body;
 
     if (!sessionName || !userName || !userId) {
       return {
@@ -37,6 +37,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<APIGatewayPr
       createdAt: Date.now(),
       participants: [participant],
       isRevealed: false,
+      votingType,
     };
 
     // Save session to DynamoDB

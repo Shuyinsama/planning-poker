@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import App from './App';
 
 // Mock child components
@@ -31,6 +32,14 @@ vi.mock('./components/SessionView', () => ({
   ),
 }));
 
+const renderApp = () => {
+  return render(
+    <MemoryRouter>
+      <App />
+    </MemoryRouter>
+  );
+};
+
 describe('App', () => {
   beforeEach(() => {
     // Clear URL params
@@ -38,23 +47,31 @@ describe('App', () => {
   });
 
   it('should render SessionCreate by default', () => {
-    render(<App />);
+    renderApp();
     expect(screen.getByText('Session Create Component')).toBeInTheDocument();
   });
 
   it('should render SessionJoin when join param is present', () => {
     window.history.pushState({}, '', '?join=test-session-123');
-    render(<App />);
+    renderApp();
     expect(screen.getByText(/Session Join Component - test-session-123/)).toBeInTheDocument();
   });
 
   it('should transition to SessionView after creating session', async () => {
-    const { rerender } = render(<App />);
+    const { rerender } = render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>
+    );
     
     const createButton = screen.getByText('Create');
     createButton.click();
     
-    rerender(<App />);
+    rerender(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>
+    );
     
     expect(screen.getByText('Session View Component')).toBeInTheDocument();
     expect(screen.getByText('Session: test-session')).toBeInTheDocument();
@@ -63,12 +80,20 @@ describe('App', () => {
 
   it('should transition to SessionView after joining session', async () => {
     window.history.pushState({}, '', '?join=existing-session');
-    const { rerender } = render(<App />);
+    const { rerender } = render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>
+    );
     
     const joinButton = screen.getByText('Join');
     joinButton.click();
     
-    rerender(<App />);
+    rerender(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>
+    );
     
     expect(screen.getByText('Session View Component')).toBeInTheDocument();
     expect(screen.getByText('Session: existing-session')).toBeInTheDocument();
@@ -78,7 +103,7 @@ describe('App', () => {
   it('should update URL when session is created', async () => {
     const pushStateSpy = vi.spyOn(window.history, 'pushState');
     
-    render(<App />);
+    renderApp();
     
     const createButton = screen.getByText('Create');
     createButton.click();
@@ -93,7 +118,7 @@ describe('App', () => {
     
     // Mock to return null session state somehow - in this case we can't easily
     // so we'll just verify the basic rendering works
-    render(<App />);
+    renderApp();
     expect(screen.getByText(/Session Join Component/)).toBeInTheDocument();
   });
 });

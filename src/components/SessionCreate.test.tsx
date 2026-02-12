@@ -82,7 +82,8 @@ describe('SessionCreate', () => {
 
   it('should generate unique IDs for session and user', async () => {
     const user = userEvent.setup();
-    vi.mocked(storage.generateId).mockReturnValueOnce('session-123').mockReturnValueOnce('user-456');
+    // userId is generated first, then sessionId in the implementation
+    vi.mocked(storage.generateId).mockReturnValueOnce('user-456').mockReturnValueOnce('session-123');
     
     render(<SessionCreate onSessionCreated={mockOnSessionCreated} />);
     

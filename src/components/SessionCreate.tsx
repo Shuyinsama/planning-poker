@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import type { Session } from '@/types';
+import type { Session, VotingType } from '@/types';
+import { VOTING_TYPE_LABELS } from '@/types';
 import { storage } from '@/lib/storage';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import type { WebSocketMessage } from '@/lib/api';
@@ -14,6 +15,7 @@ interface SessionCreateProps {
 export function SessionCreate({ onSessionCreated }: SessionCreateProps) {
   const [sessionName, setSessionName] = useState('');
   const [userName, setUserName] = useState('');
+  const [votingType, setVotingType] = useState<VotingType>('fibonacci');
   const { wsClient, isBackendAvailable, connect, addMessageHandler, removeMessageHandler } = useWebSocket();
 
   // Connect to WebSocket on mount
@@ -51,7 +53,7 @@ export function SessionCreate({ onSessionCreated }: SessionCreateProps) {
 
     // Use WebSocket if available
     if (isBackendAvailable && wsClient) {
-      wsClient.createSession(sessionName, userName, userId);
+      wsClient.createSession(sessionName, userName, userId, votingType);
     } else {
       // Fallback to localStorage
       const sessionId = storage.generateId();
@@ -69,6 +71,7 @@ export function SessionCreate({ onSessionCreated }: SessionCreateProps) {
         ],
         isRevealed: false,
         currentUserId: userId,
+        votingType,
       };
 
       storage.saveSession(newSession);
@@ -103,6 +106,20 @@ export function SessionCreate({ onSessionCreated }: SessionCreateProps) {
               onChange={(e) => setSessionName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && createSession()}
             />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1.5 block">Voting Type</label>
+            <select
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              value={votingType}
+              onChange={(e) => setVotingType(e.target.value as VotingType)}
+            >
+              {(Object.keys(VOTING_TYPE_LABELS) as VotingType[]).map((type) => (
+                <option key={type} value={type}>
+                  {VOTING_TYPE_LABELS[type]}
+                </option>
+              ))}
+            </select>
           </div>
           <Button onClick={createSession} className="w-full" disabled={!sessionName.trim() || !userName.trim()}>
             Create Session

@@ -1,4 +1,8 @@
-export type CardValue = '0' | '1' | '2' | '3' | '5' | '8' | '13' | '20' | '40' | '100' | '?' | '☕';
+export type VotingType = 'fibonacci' | 'tshirt';
+
+export type FibonacciCardValue = '0' | '1' | '2' | '3' | '5' | '8' | '13' | '20' | '40' | '100' | '?' | '☕';
+export type TShirtCardValue = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | '?' | '☕';
+export type CardValue = FibonacciCardValue | TShirtCardValue;
 
 export interface Participant {
   id: string;
@@ -14,6 +18,7 @@ export interface Session {
   createdAt: number;
   participants: Participant[];
   isRevealed: boolean;
+  votingType: VotingType;
 }
 
 export interface Connection {
@@ -32,6 +37,7 @@ export interface CreateSessionMessage {
   sessionName: string;
   userName: string;
   userId: string;
+  votingType?: VotingType;
 }
 
 export interface JoinSessionMessage {

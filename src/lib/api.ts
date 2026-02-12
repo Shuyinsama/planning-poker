@@ -1,5 +1,5 @@
 import { config } from '@/config/env';
-import type { CardValue } from '@/types';
+import type { CardValue, VotingType } from '@/types';
 
 export type WebSocketMessageType =
   | 'sessionCreated'
@@ -125,10 +125,10 @@ export class WebSocketClient {
   }
 
   // Session operations
-  createSession(sessionName: string, userName: string, userId: string): void {
+  createSession(sessionName: string, userName: string, userId: string, votingType: VotingType = 'fibonacci'): void {
     this.sessionId = null; // Will be set when we receive sessionCreated
     this.participantId = userId;
-    this.send('createSession', { sessionName, userName, userId });
+    this.send('createSession', { sessionName, userName, userId, votingType });
   }
 
   joinSession(sessionId: string, userName: string, userId: string): void {
