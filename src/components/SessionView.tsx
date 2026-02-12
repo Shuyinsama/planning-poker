@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PokerCard } from '@/components/PokerCard';
 import { ParticipantList } from '@/components/ParticipantList';
 import type { CardValue } from '@/types';
+import { FIBONACCI_VALUES, TSHIRT_VALUES } from '@/types';
 import { useSession } from '@/hooks/useSession';
 import { useSettings } from '@/contexts/SettingsContext';
-
-const CARD_VALUES: CardValue[] = ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '☕'];
 
 interface SessionViewProps {
   sessionId: string;
@@ -18,6 +17,11 @@ export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
   const { session, selectCard, revealCards, resetVoting } = useSession(sessionId, currentUserId);
   const { settings } = useSettings();
   const [shareLink] = useState(`${window.location.origin}?join=${sessionId}`);
+
+  const cardValues = useMemo(() => {
+    if (!session) return FIBONACCI_VALUES;
+    return session.votingType === 'tshirt' ? TSHIRT_VALUES : FIBONACCI_VALUES;
+  }, [session?.votingType]);
 
   const currentParticipant = session?.participants.find((p) => p.id === currentUserId);
   const allReady = session?.participants.every((p) => p.isReady) ?? false;
@@ -76,12 +80,12 @@ export function SessionView({ sessionId, currentUserId }: SessionViewProps) {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3 justify-center">
-                  {CARD_VALUES.map((value) => (
+                  {cardValues.map((value) => (
                     <PokerCard
                       key={value}
-                      value={value}
+                      value={value as CardValue}
                       isSelected={currentParticipant?.selectedCard === value}
-                      onClick={() => handleCardSelect(value)}
+                      onClick={() => handleCardSelect(value as CardValue)}
                       disabled={session.isRevealed}
                     />
                   ))}
