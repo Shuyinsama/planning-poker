@@ -12,12 +12,23 @@ export const VOTING_TYPE_LABELS: Record<VotingType, string> = {
   tshirt: 'T-Shirt Sizes (XS, S, M, L...)',
 };
 
+export interface Reaction {
+  id: string;
+  emoji: string;
+  fromUserId: string;
+  toUserId: string;
+  timestamp: number;
+}
+
+export const REACTION_EMOJIS = ['👍', '👏', '🎉', '🔥', '❤️', '😂', '🤔', '👀'];
+
 export interface Participant {
   id: string;
   name: string;
   selectedCard?: CardValue;
   isReady: boolean;
   lastSeen: number;
+  reactions?: Reaction[];
 }
 
 export interface Session {

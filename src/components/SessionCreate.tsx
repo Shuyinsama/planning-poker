@@ -10,12 +10,14 @@ import type { WebSocketMessage } from '@/lib/api';
 
 interface SessionCreateProps {
   onSessionCreated: (sessionId: string, userId: string) => void;
+  onJoinExisting: (sessionId?: string) => void;
 }
 
-export function SessionCreate({ onSessionCreated }: SessionCreateProps) {
+export function SessionCreate({ onSessionCreated, onJoinExisting }: SessionCreateProps) {
   const [sessionName, setSessionName] = useState('');
   const [userName, setUserName] = useState('');
   const [votingType, setVotingType] = useState<VotingType>('fibonacci');
+  const [joinSessionCode, setJoinSessionCode] = useState('');
   const { wsClient, isBackendAvailable, connect, addMessageHandler, removeMessageHandler } = useWebSocket();
 
   // Connect to WebSocket on mount
@@ -124,6 +126,25 @@ export function SessionCreate({ onSessionCreated }: SessionCreateProps) {
           <Button onClick={createSession} className="w-full" disabled={!sessionName.trim() || !userName.trim()}>
             Create Session
           </Button>
+          
+          <div className="border-t pt-4 mt-4">
+            <p className="text-sm text-muted-foreground mb-2">Or join an existing session:</p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter session code"
+                value={joinSessionCode}
+                onChange={(e) => setJoinSessionCode(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && joinSessionCode.trim() && onJoinExisting(joinSessionCode.trim())}
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => onJoinExisting(joinSessionCode.trim())}
+                disabled={!joinSessionCode.trim()}
+              >
+                Join
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

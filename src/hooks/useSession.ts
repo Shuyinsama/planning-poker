@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Session, Participant, CardValue } from '@/types';
+import type { Session, Participant, CardValue, Reaction } from '@/types';
 import { storage } from '@/lib/storage';
 import { useWebSocket } from './useWebSocket';
 import type { WebSocketMessage } from '@/lib/api';
@@ -63,6 +63,7 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
         case 'cardsRevealed':
         case 'votingReset':
         case 'sessionUpdate':
+        case 'reactionSent':
           setSession(message.data);
           break;
         case 'error':
@@ -217,12 +218,47 @@ export function useSession(sessionId: string | null, currentUserId?: string) {
     }
   };
 
+  const sendReaction = (toUserId: string, emoji: string) => {
+    if (!session || !currentUserId) return;
+
+    const reaction: Reaction = {
+      id: Math.random().toString(36).substring(2, 9),
+      emoji,
+      fromUserId: currentUserId,
+      toUserId,
+      timestamp: Date.now(),
+    };
+
+    // Use WebSocket if available
+    if (isBackendAvailable && wsClient) {
+      wsClient.sendReaction(session.id, currentUserId, toUserId, emoji);
+    } else {
+      // Fallback to localStorage
+      const updatedSession = {
+        ...session,
+        participants: session.participants.map((p) => {
+          if (p.id === toUserId) {
+            const existingReactions = p.reactions || [];
+            // Keep only recent reactions (last 10 seconds) and add new one
+            const recentReactions = existingReactions.filter(
+              (r) => Date.now() - r.timestamp < 10000
+            );
+            return { ...p, reactions: [...recentReactions, reaction] };
+          }
+          return p;
+        }),
+      };
+      updateSession(updatedSession);
+    }
+  };
+
   return {
     session,
     selectCard,
     revealCards,
     resetVoting,
     addParticipant,
+    sendReaction,
     isBackendAvailable,
   };
 }

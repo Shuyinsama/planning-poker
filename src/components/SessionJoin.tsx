@@ -9,10 +9,13 @@ import type { WebSocketMessage } from '@/lib/api';
 interface SessionJoinProps {
   sessionId: string;
   onJoined: (userId: string) => void;
+  onNewSession: () => void;
+  onJoinDifferent: (sessionId?: string) => void;
 }
 
-export function SessionJoin({ sessionId, onJoined }: SessionJoinProps) {
+export function SessionJoin({ sessionId, onJoined, onNewSession, onJoinDifferent }: SessionJoinProps) {
   const [userName, setUserName] = useState('');
+  const [joinSessionCode, setJoinSessionCode] = useState('');
   const { wsClient, isBackendAvailable, connect, addMessageHandler, removeMessageHandler } = useWebSocket();
 
   // Connect to WebSocket on mount
@@ -89,6 +92,7 @@ export function SessionJoin({ sessionId, onJoined }: SessionJoinProps) {
           <CardDescription>Enter your name to join the session</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">Session code: <code className="bg-muted px-1 rounded">{sessionId}</code></p>
           <div>
             <label className="text-sm font-medium mb-1.5 block">Your Name</label>
             <Input
@@ -100,6 +104,29 @@ export function SessionJoin({ sessionId, onJoined }: SessionJoinProps) {
           </div>
           <Button onClick={joinSession} className="w-full" disabled={!userName.trim()}>
             Join Session
+          </Button>
+          
+          <div className="border-t pt-4 mt-4">
+            <p className="text-sm text-muted-foreground mb-2">Or join a different session:</p>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter session code"
+                value={joinSessionCode}
+                onChange={(e) => setJoinSessionCode(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && joinSessionCode.trim() && onJoinDifferent(joinSessionCode.trim())}
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => onJoinDifferent(joinSessionCode.trim())}
+                disabled={!joinSessionCode.trim()}
+              >
+                Join
+              </Button>
+            </div>
+          </div>
+          
+          <Button onClick={onNewSession} variant="ghost" className="w-full">
+            Create New Session Instead
           </Button>
         </CardContent>
       </Card>

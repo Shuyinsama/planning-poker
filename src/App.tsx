@@ -85,12 +85,37 @@ function App() {
     saveUserState(sessionId, newUserId);
   };
 
+  const handleNewSession = () => {
+    // Clear saved user state and go to create screen
+    localStorage.removeItem(SESSION_STATE_KEY);
+    setSessionId(null);
+    setUserId(null);
+    setAppState('create');
+    window.history.pushState({}, '', window.location.pathname);
+  };
+
+  const handleJoinDifferentSession = (newSessionId?: string) => {
+    // Allow joining a different session or as a different user
+    localStorage.removeItem(SESSION_STATE_KEY);
+    setUserId(null);
+    if (newSessionId) {
+      setSessionId(newSessionId);
+      setAppState('join');
+      window.history.pushState({}, '', `?join=${newSessionId}`);
+    } else if (sessionId) {
+      setAppState('join');
+    } else {
+      setAppState('create');
+      window.history.pushState({}, '', window.location.pathname);
+    }
+  };
+
   return (
     <>
       <MenuBar />
-      {appState === 'create' && <SessionCreate onSessionCreated={handleSessionCreated} />}
-      {appState === 'join' && sessionId && <SessionJoin sessionId={sessionId} onJoined={handleJoined} />}
-      {appState === 'session' && sessionId && userId && <SessionView sessionId={sessionId} currentUserId={userId} />}
+      {appState === 'create' && <SessionCreate onSessionCreated={handleSessionCreated} onJoinExisting={handleJoinDifferentSession} />}
+      {appState === 'join' && sessionId && <SessionJoin sessionId={sessionId} onJoined={handleJoined} onNewSession={handleNewSession} onJoinDifferent={handleJoinDifferentSession} />}
+      {appState === 'session' && sessionId && userId && <SessionView sessionId={sessionId} currentUserId={userId} onNewSession={handleNewSession} onJoinDifferent={handleJoinDifferentSession} />}
       {appState !== 'create' && appState !== 'join' && appState !== 'session' && <div>Loading...</div>}
     </>
   );

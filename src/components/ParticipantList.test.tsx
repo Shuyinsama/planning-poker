@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { ParticipantList } from './ParticipantList';
 import type { Participant } from '@/types';
@@ -20,39 +20,47 @@ describe('ParticipantList', () => {
     },
   ];
 
+  const mockOnReaction = vi.fn();
+  const defaultProps = {
+    participants: mockParticipants,
+    isRevealed: false,
+    currentUserId: 'current-user',
+    onReaction: mockOnReaction,
+  };
+
   it('should render participant count', () => {
-    render(<ParticipantList participants={mockParticipants} isRevealed={false} />);
+    render(<ParticipantList {...defaultProps} />);
     expect(screen.getByText(/Participants \(2\)/i)).toBeInTheDocument();
   });
 
   it('should render all participant names', () => {
-    render(<ParticipantList participants={mockParticipants} isRevealed={false} />);
+    render(<ParticipantList {...defaultProps} />);
     expect(screen.getByText('Alice')).toBeInTheDocument();
     expect(screen.getByText('Bob')).toBeInTheDocument();
   });
 
   it('should show ready status when participant is ready but not revealed', () => {
-    render(<ParticipantList participants={mockParticipants} isRevealed={false} />);
+    render(<ParticipantList {...defaultProps} />);
     expect(screen.getByText(/🂠 Ready/i)).toBeInTheDocument();
   });
 
   it('should show thinking status when participant is not ready', () => {
-    render(<ParticipantList participants={mockParticipants} isRevealed={false} />);
+    render(<ParticipantList {...defaultProps} />);
     expect(screen.getByText(/Thinking.../i)).toBeInTheDocument();
   });
 
   it('should show selected cards when revealed', () => {
-    render(<ParticipantList participants={mockParticipants} isRevealed={true} />);
+    render(<ParticipantList {...defaultProps} isRevealed={true} />);
     expect(screen.getByText('5')).toBeInTheDocument();
   });
 
   it('should not show ready status when revealed', () => {
-    render(<ParticipantList participants={mockParticipants} isRevealed={true} />);
+    render(<ParticipantList {...defaultProps} isRevealed={true} />);
     expect(screen.queryByText(/🂠 Ready/i)).not.toBeInTheDocument();
   });
 
   it('should handle empty participant list', () => {
-    render(<ParticipantList participants={[]} isRevealed={false} />);
+    render(<ParticipantList {...defaultProps} participants={[]} />);
     expect(screen.getByText(/Participants \(0\)/i)).toBeInTheDocument();
   });
 
@@ -65,7 +73,7 @@ describe('ParticipantList', () => {
         lastSeen: Date.now(),
       },
     ];
-    render(<ParticipantList participants={participants} isRevealed={true} />);
+    render(<ParticipantList {...defaultProps} participants={participants} isRevealed={true} />);
     expect(screen.getByText('Charlie')).toBeInTheDocument();
     // Should not show a card value, only participant count is visible
     const participantRow = screen.getByText('Charlie').closest('div');
