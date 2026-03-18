@@ -64,9 +64,9 @@ export class LocalStorageTransport implements SessionTransport {
     };
   }
 
-  createSession(sessionName: string, userName: string, userId: string, votingType: VotingType): void {
+  createSession(sessionId: string, sessionName: string, userName: string, userId: string, votingType: VotingType): void {
     const session: Session = {
-      id: storage.generateId(),
+      id: sessionId,
       name: sessionName,
       createdAt: Date.now(),
       participants: [{ id: userId, name: userName, isReady: false, lastSeen: Date.now() }],

@@ -35,7 +35,7 @@ export class WebSocketTransport implements SessionTransport {
     };
   }
 
-  createSession(sessionName: string, userName: string, userId: string, votingType: VotingType): void {
+  createSession(_sessionId: string, sessionName: string, userName: string, userId: string, votingType: VotingType): void {
     this.wsClient.createSession(sessionName, userName, userId, votingType);
   }
 

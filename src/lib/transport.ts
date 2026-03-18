@@ -8,7 +8,7 @@ export type SessionUpdateHandler = (session: Session) => void;
 
 export interface SessionTransport {
   subscribe(sessionId: string, currentUserId: string, onUpdate: SessionUpdateHandler): () => void;
-  createSession(sessionName: string, userName: string, userId: string, votingType: VotingType): void;
+  createSession(sessionId: string, sessionName: string, userName: string, userId: string, votingType: VotingType): void;
   joinSession(sessionId: string, userName: string, userId: string): void;
   selectCard(sessionId: string, participantId: string, card: CardValue): void;
   revealCards(sessionId: string): void;
