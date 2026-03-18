@@ -1,5 +1,6 @@
 import { config } from '@/config/env';
 import type { Session, Participant, CardValue, VotingType } from '@/types';
+import { LocalStorageTransport } from '@/lib/transports/local';
 
 export type SessionUpdateHandler = (session: Session) => void;
 
@@ -39,10 +40,9 @@ export function getTransport(): SessionTransport {
   if (overrideTransport !== null) {
     return overrideTransport;
   }
-  // Real implementations (LocalStorageTransport / WebSocketTransport) will be returned here
-  // once US-002 and US-003 are implemented. For now, return the stub.
-  if (config.websocketUrl) {
-    return new StubTransport();
+  if (!config.websocketUrl) {
+    return new LocalStorageTransport();
   }
+  // WebSocketTransport will be returned here once US-003 is implemented.
   return new StubTransport();
 }
