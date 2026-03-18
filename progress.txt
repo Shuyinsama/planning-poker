@@ -1,3 +1,17 @@
+## 2026-03-18 - US-004
+- Rewrote `useSession.ts` (42 lines): single useEffect delegates to `transport.subscribe()`, each action is a one-liner; removed all storage/wsClient/isBackendAvailable/setInterval references; removed `isBackendAvailable` from return value
+- Updated `SessionTransport` interface: added `sessionId` as first param to `createSession` so components can pre-generate IDs and immediately invoke callbacks
+- Updated `LocalStorageTransport.createSession` to use provided sessionId; updated `WebSocketTransport.createSession` to accept (and ignore) it — server still generates the real ID
+- Rewrote `SessionCreate.tsx` and `SessionJoin.tsx`: removed `useWebSocket`/`wsClient` usage entirely; both call `getTransport()` and invoke `onSessionCreated`/`onJoined` immediately
+- Rewrote `SessionCreate.test.tsx` and `SessionJoin.test.tsx`: replaced `vi.mock('@/lib/storage')` with `setTransport(mockTransport)` pattern; assertions use `expect.any(String)` for generated IDs
+- Files changed: `src/hooks/useSession.ts`, `src/components/SessionCreate.tsx`, `src/components/SessionCreate.test.tsx`, `src/components/SessionJoin.tsx`, `src/components/SessionJoin.test.tsx`, `src/lib/transport.ts`, `src/lib/transports/local.ts`, `src/lib/transports/websocket.ts`
+- All 68 tests pass; lint errors reduced (pre-existing issues unchanged)
+- **Learnings for future iterations:**
+  - `useRef(getTransport())` captures transport once on mount — avoids creating multiple WS connections if actions call `getTransport()` repeatedly
+  - Passing sessionId into `createSession()` interface allows immediate callback invocation without waiting for async server response; WS transport ignores it since server is authoritative
+  - Component tests no longer need `vi.mock('@/lib/storage')` once transport is abstracted — `setTransport(mockTransport)` is the sole test seam
+---
+
 ## 2026-03-18 - US-003
 - Implemented `src/lib/transports/websocket.ts` — `WebSocketTransport` class implementing `SessionTransport`
 - `subscribe()` calls `wsClient.setSessionInfo()`, registers a message handler covering all 8 WS message types, returns cleanup that deregisters the handler
@@ -18,6 +32,9 @@
 - Transport test seam: `setTransport()` / `getTransport()` in `src/lib/transport.ts`
 - Tests use `vi.useFakeTimers()` for interval-based logic; always call `vi.useRealTimers()` in afterEach
 - `storage.generateId()` available for random ID generation
+- Component tests: use `setTransport(mockTransport)` in beforeEach / `setTransport(null)` in afterEach — no need to mock storage or api
+- `useRef(getTransport())` in hooks captures transport once on mount to avoid creating multiple WS instances
+- `createSession` interface accepts `sessionId` as first param — caller pre-generates it and can immediately invoke callbacks
 
 ---
 
