@@ -1,0 +1,92 @@
+{
+  "project": "planning-poker",
+  "branchName": "ralph/session-transport-abstraction",
+  "description": "Extract SessionTransport abstraction to eliminate dual-mode branching in useSession — replaces scattered if/else WebSocket-vs-localStorage logic with a clean interface and two implementations",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Define SessionTransport interface and factory scaffold",
+      "description": "As a developer, I want a SessionTransport interface and factory so that useSession and tests have a stable contract to program against.",
+      "acceptanceCriteria": [
+        "Create src/lib/transport.ts exporting the SessionTransport interface with methods: subscribe, createSession, joinSession, selectCard, revealCards, resetVoting, addParticipant, sendReaction",
+        "subscribe(sessionId, currentUserId, onUpdate) returns a () => void cleanup function",
+        "Export SessionUpdateHandler type alias: (session: Session) => void",
+        "Export getTransport() factory that reads config.websocketUrl and returns a stub implementation (no-op methods are acceptable at this stage)",
+        "Export setTransport(t: SessionTransport | null) function for use as a test seam",
+        "No changes to existing files required",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Implement LocalStorageTransport with unit tests",
+      "description": "As a developer, I want a LocalStorageTransport that encapsulates all localStorage-mode logic so that polling, heartbeat, and presence cleanup are tested without React.",
+      "acceptanceCriteria": [
+        "Create src/lib/transports/local.ts implementing SessionTransport",
+        "Export named constants: PRESENCE_TIMEOUT = 30000, HEARTBEAT_INTERVAL = 5000, POLL_INTERVAL = 2000",
+        "subscribe() starts a POLL_INTERVAL interval that reads storage and calls onUpdate, and a HEARTBEAT_INTERVAL interval that writes lastSeen and runs cleanupInactiveParticipants; returns a cleanup that clears both intervals",
+        "selectCard, revealCards, resetVoting, addParticipant, sendReaction each apply the mutation locally, call storage.saveSession(), then call onUpdate() with the updated session",
+        "sendReaction filters reactions older than 10000ms before saving",
+        "getTransport() returns a LocalStorageTransport when config.websocketUrl is empty",
+        "Unit test (no React, no renderHook): inactive participant is removed after PRESENCE_TIMEOUT using vi.useFakeTimers()",
+        "Unit test: onUpdate is called on each poll tick with current storage state",
+        "Unit test: selectCard produces correct session state",
+        "Unit test: revealCards sets isRevealed to true",
+        "Unit test: resetVoting clears all selectedCard values and sets isRevealed to false",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Implement WebSocketTransport with unit tests",
+      "description": "As a developer, I want a WebSocketTransport that encapsulates all WebSocket-mode logic so that WS dispatch and message routing are tested without a real connection.",
+      "acceptanceCriteria": [
+        "Create src/lib/transports/websocket.ts implementing SessionTransport",
+        "subscribe() registers a message handler on WebSocketClient covering all message types (sessionCreated, sessionJoined, participantJoined, participantUpdated, cardsRevealed, votingReset, sessionUpdate, reactionSent); calls wsClient.setSessionInfo(); returns a cleanup that deregisters the handler",
+        "selectCard delegates to wsClient.updateParticipant with correct args",
+        "revealCards delegates to wsClient.revealCards",
+        "resetVoting delegates to wsClient.resetVoting",
+        "sendReaction delegates to wsClient.sendReaction",
+        "addParticipant is a documented no-op (joins are server-driven in WebSocket mode)",
+        "getTransport() returns a WebSocketTransport when config.websocketUrl is set",
+        "Unit test (mock WebSocketClient): subscribe() registers a handler and calls onUpdate when a WS message arrives",
+        "Unit test: subscribe() cleanup deregisters the handler",
+        "Unit test: selectCard calls wsClient.updateParticipant with correct arguments",
+        "Unit test: revealCards calls wsClient.revealCards with correct arguments",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "Can be implemented in parallel with US-002 — both depend only on US-001"
+    },
+    {
+      "id": "US-004",
+      "title": "Refactor useSession to delegate to SessionTransport",
+      "description": "As a developer, I want useSession to be a pure React orchestrator so that it contains no transport-specific logic and is ≤ 60 lines.",
+      "acceptanceCriteria": [
+        "useSession.ts contains zero references to storage, wsClient, isBackendAvailable, or setInterval",
+        "useSession.ts is ≤ 60 lines",
+        "Single useEffect calls transport.subscribe(sessionId, currentUserId, setSession) and returns its cleanup",
+        "Each action callback (selectCard, revealCards, resetVoting, addParticipant, sendReaction) is a one-liner forwarding to transport",
+        "isBackendAvailable removed from the useSession return value; update any consumer that referenced it",
+        "SessionCreate.tsx and SessionJoin.tsx contain no direct wsClient or useWebSocket references",
+        "All existing component and hook tests updated to use setTransport(mockTransport) in beforeEach and setTransport(null) in afterEach",
+        "No vi.mock('@/lib/api') or vi.mock('@/lib/storage') remain in hook or component test files",
+        "Coverage thresholds maintained (80% branches/functions/lines/statements)",
+        "Typecheck passes",
+        "Tests pass"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Depends on US-002 and US-003 both being complete"
+    }
+  ]
+}

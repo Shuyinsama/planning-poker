@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { storage } from '@/lib/storage';
-import { useWebSocket } from '@/hooks/useWebSocket';
-import type { WebSocketMessage } from '@/lib/api';
+import { getTransport } from '@/lib/transport';
 
 interface SessionJoinProps {
   sessionId: string;
@@ -16,72 +15,12 @@ interface SessionJoinProps {
 export function SessionJoin({ sessionId, onJoined, onNewSession, onJoinDifferent }: SessionJoinProps) {
   const [userName, setUserName] = useState('');
   const [joinSessionCode, setJoinSessionCode] = useState('');
-  const { wsClient, isBackendAvailable, connect, addMessageHandler, removeMessageHandler } = useWebSocket();
-
-  // Connect to WebSocket on mount
-  useEffect(() => {
-    if (isBackendAvailable && wsClient) {
-      connect();
-    }
-  }, [isBackendAvailable, wsClient, connect]);
-
-  // Handle session joined response from WebSocket
-  useEffect(() => {
-    if (!isBackendAvailable) return;
-
-    const handleMessage = (message: WebSocketMessage) => {
-      if (message.type === 'sessionJoined') {
-        console.log('SessionJoin - Joined via WebSocket:', message.data);
-        // Extract userId from the WebSocket client (it was set when joining)
-        // For now, find the user by name in the participants list
-        const session = message.data;
-        const currentUser = session.participants.find((p: any) => p.name === userName);
-        if (currentUser) {
-          onJoined(currentUser.id);
-        }
-      } else if (message.type === 'error') {
-        alert(message.data.message || 'Failed to join session');
-      }
-    };
-
-    addMessageHandler(handleMessage);
-    return () => removeMessageHandler(handleMessage);
-  }, [isBackendAvailable, userName, onJoined, addMessageHandler, removeMessageHandler]);
 
   const joinSession = () => {
     if (!userName.trim()) return;
-
     const userId = storage.generateId();
-
-    // Use WebSocket if available
-    if (isBackendAvailable && wsClient) {
-      wsClient.joinSession(sessionId, userName, userId);
-    } else {
-      // Fallback to localStorage
-      const session = storage.getSession(sessionId);
-      if (!session) {
-        alert('Session not found');
-        return;
-      }
-
-      const newParticipant = {
-        id: userId,
-        name: userName,
-        isReady: false,
-        lastSeen: Date.now(),
-      };
-
-      const updatedSession = {
-        ...session,
-        participants: [...session.participants, newParticipant],
-      };
-
-      console.log('SessionJoin - Before save, session:', session);
-      console.log('SessionJoin - After update, participants:', updatedSession.participants);
-      storage.saveSession(updatedSession);
-      console.log('SessionJoin - Saved to storage');
-      onJoined(userId);
-    }
+    getTransport().joinSession(sessionId, userName, userId);
+    onJoined(userId);
   };
 
   return (
@@ -105,7 +44,7 @@ export function SessionJoin({ sessionId, onJoined, onNewSession, onJoinDifferent
           <Button onClick={joinSession} className="w-full" disabled={!userName.trim()}>
             Join Session
           </Button>
-          
+
           <div className="border-t pt-4 mt-4">
             <p className="text-sm text-muted-foreground mb-2">Or join a different session:</p>
             <div className="flex gap-2">
@@ -115,8 +54,8 @@ export function SessionJoin({ sessionId, onJoined, onNewSession, onJoinDifferent
                 onChange={(e) => setJoinSessionCode(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && joinSessionCode.trim() && onJoinDifferent(joinSessionCode.trim())}
               />
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => onJoinDifferent(joinSessionCode.trim())}
                 disabled={!joinSessionCode.trim()}
               >
@@ -124,7 +63,7 @@ export function SessionJoin({ sessionId, onJoined, onNewSession, onJoinDifferent
               </Button>
             </div>
           </div>
-          
+
           <Button onClick={onNewSession} variant="ghost" className="w-full">
             Create New Session Instead
           </Button>
