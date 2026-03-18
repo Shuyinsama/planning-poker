@@ -1,0 +1,37 @@
+## 2026-03-18 - US-003
+- Implemented `src/lib/transports/websocket.ts` — `WebSocketTransport` class implementing `SessionTransport`
+- `subscribe()` calls `wsClient.setSessionInfo()`, registers a message handler covering all 8 WS message types, returns cleanup that deregisters the handler
+- `addParticipant` is a documented no-op (server-driven joins in WS mode)
+- Updated `getTransport()` in `transport.ts` to return `WebSocketTransport(new WebSocketClient(url))` when websocketUrl is set; removed now-unused `StubTransport`
+- Created `src/lib/transports/websocket.test.ts` with 9 unit tests using mock WsClient (no real connection)
+- Files changed: `src/lib/transports/websocket.ts` (new), `src/lib/transports/websocket.test.ts` (new), `src/lib/transport.ts` (updated)
+- **Learnings for future iterations:**
+  - Mock WsClient pattern: create a plain object with `vi.fn()` methods and a live `Set<MessageHandler>` for `_handlers`; trigger messages by iterating `_handlers`
+  - Coverage thresholds fail globally (pre-existing — `api.ts` and `useWebSocket.ts` have near-zero coverage); don't block on this
+  - US-004 (refactor useSession) can now proceed — both transports are complete
+---
+
+## Codebase Patterns
+- Types live in `src/types/index.ts` (imported as `@/types`)
+- `storage` utility in `src/lib/storage.ts` wraps localStorage; use it for all read/write in local transport
+- `config.websocketUrl` in `src/config/env.ts` controls transport mode (empty = localStorage)
+- Transport test seam: `setTransport()` / `getTransport()` in `src/lib/transport.ts`
+- Tests use `vi.useFakeTimers()` for interval-based logic; always call `vi.useRealTimers()` in afterEach
+- `storage.generateId()` available for random ID generation
+
+---
+
+## 2026-03-18 - US-002
+- Implemented `src/lib/transports/local.ts` — `LocalStorageTransport` class implementing `SessionTransport`
+- Exported constants: `PRESENCE_TIMEOUT`, `HEARTBEAT_INTERVAL`, `POLL_INTERVAL`
+- `subscribe()` sets up heartbeat + poll intervals, returns cleanup; does initial load + onUpdate call
+- All mutation methods (selectCard, revealCards, resetVoting, addParticipant, sendReaction) read from storage, mutate, save, done — no onUpdate call needed since poll picks it up
+- `sendReaction` filters reactions older than 10s before saving
+- Updated `getTransport()` in `transport.ts` to return `LocalStorageTransport` when no websocketUrl
+- Created `src/lib/transports/local.test.ts` with 7 unit tests (no React, no renderHook)
+- Files changed: `src/lib/transports/local.ts` (new), `src/lib/transports/local.test.ts` (new), `src/lib/transport.ts` (updated)
+- **Learnings for future iterations:**
+  - `subscribe()` doesn't call onUpdate from mutation methods — the poll interval picks up storage changes; this decouples mutations from React state
+  - Heartbeat interval also calls onUpdate (after cleanup check), so no separate poll-only cleanup needed for stale participants
+  - US-003 (WebSocketTransport) can be implemented in parallel — only needs `src/lib/transport.ts` interface and `src/lib/api.ts` (WebSocketClient)
+---
