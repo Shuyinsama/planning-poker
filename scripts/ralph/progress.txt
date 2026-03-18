@@ -1,0 +1,19 @@
+## Codebase Patterns
+- Types are in `src/types/index.ts` (not `src/types.ts`)
+- Local tsc binary: `node_modules/.bin/tsc --noEmit`
+- `@/` path alias maps to `src/`
+- `config.websocketUrl` from `src/config/env.ts` is the toggle between local and WS mode
+
+# Ralph Progress Log
+Started: Wed Mar 18 23:12:48 CET 2026
+---
+
+## 2026-03-18 - US-001
+- Created `src/lib/transport.ts` exporting `SessionTransport` interface, `SessionUpdateHandler` type, `getTransport()` factory, `setTransport()` test seam, and `StubTransport` no-op implementation
+- Files changed: `src/lib/transport.ts` (new), `prd.json`
+- **Learnings for future iterations:**
+  - Types live in `src/types/index.ts`
+  - Run typecheck with `node_modules/.bin/tsc --noEmit`
+  - `config.websocketUrl` is the runtime flag determining transport mode
+  - The `setTransport()` / `overrideTransport` pattern enables test injection without React mocking
+---
