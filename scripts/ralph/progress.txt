@@ -3,6 +3,8 @@
 - Local tsc binary: `node_modules/.bin/tsc --noEmit`
 - `@/` path alias maps to `src/`
 - `config.websocketUrl` from `src/config/env.ts` is the toggle between local and WS mode
+- For timer-based animation removal in tests, use `vi.useFakeTimers()` + `act(() => vi.advanceTimersByTime(N))` — CSS `animationend` events don't fire in JSDOM
+- CSS keyframes can be injected via a `<style>` tag with a const string; use CSS custom properties (`--dx`, `--dy`) on each element for per-instance values in keyframes
 
 # Ralph Progress Log
 Started: Wed Mar 18 23:12:48 CET 2026
@@ -16,4 +18,18 @@ Started: Wed Mar 18 23:12:48 CET 2026
   - Run typecheck with `node_modules/.bin/tsc --noEmit`
   - `config.websocketUrl` is the runtime flag determining transport mode
   - The `setTransport()` / `overrideTransport` pattern enables test injection without React mocking
+---
+
+## 2026-03-19 - US-002
+- Created `src/components/FlyingEmojiOverlay.tsx` with `FlyingEmojiOverlay` component and exported `FlyingEmoji` interface
+- Component renders a `position: fixed, inset: 0, pointer-events: none, z-index: 9999` overlay
+- Each emoji flies from startX/Y to endX/Y over 900ms, splat-bounces 250ms, fades out 250ms (1400ms total)
+- CSS keyframes injected via `<style>` tag; per-emoji `--dx`/`--dy` CSS custom properties drive the transform
+- `useEffect` + `setTimeout(1400ms)` drives the `onRemove` callback (not `animationend` — JSDOM doesn't fire it)
+- Created `src/components/FlyingEmojiOverlay.test.tsx` with 3 unit tests (render, onRemove timing, two simultaneous)
+- Files changed: `src/components/FlyingEmojiOverlay.tsx` (new), `src/components/FlyingEmojiOverlay.test.tsx` (new), `prd.json`
+- **Learnings for future iterations:**
+  - JSDOM does not fire CSS `animationend` events — use `setTimeout` for animation lifecycle instead
+  - CSS custom properties in inline `style` objects require casting as `React.CSSProperties` to satisfy TypeScript
+  - `vi.useFakeTimers()` in tests needs `afterEach(() => vi.useRealTimers())` to avoid leaking into other tests
 ---
