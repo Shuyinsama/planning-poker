@@ -1,0 +1,74 @@
+{
+  "project": "planning-poker",
+  "branchName": "ralph/flying-emoji-reactions",
+  "description": "Flying emoji reactions — hover a participant to reveal emoji options; clicking one launches a flying emoji across the full screen toward the target's name, visible to all session participants",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Inline hover emoji picker in ParticipantList",
+      "description": "As a session participant, I want to hover over another participant's row so that emoji options appear inline without clicking a button first.",
+      "acceptanceCriteria": [
+        "Hovering a participant row reveals an inline row of emoji buttons (all emojis from REACTION_EMOJIS: ['👍', '👏', '🎉', '🔥', '❤️', '😂', '🤔', '👀'])",
+        "Moving the mouse away hides the emoji row",
+        "Clicking an emoji calls onReaction with the correct participantId and emoji",
+        "Emoji row does not appear on the current user's own row",
+        "The existing 😀 trigger button and EmojiPicker popover are removed",
+        "Unit test: mouseenter on a participant row shows the emoji buttons",
+        "Unit test: mouseleave hides the emoji buttons",
+        "Unit test: clicking an emoji fires onReaction with correct participantId and emoji",
+        "Unit test: emoji row is absent on the current user's own row",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "FlyingEmojiOverlay component",
+      "description": "As a session participant, I want a flying emoji animation that travels across the full screen toward the target participant's name, splats on arrival, then fades out.",
+      "acceptanceCriteria": [
+        "Create a FlyingEmojiOverlay component that accepts FlyingEmoji[] prop (each with: id, emoji, startX, startY, endX, endY) and an onRemove(id: string) callback",
+        "Each flying emoji renders at its startX/Y and animates toward endX/Y over ~900ms (ease-in-out)",
+        "On arrival, plays a splat/bounce keyframe (~250ms) then fades out (~250ms)",
+        "onRemove is called with the correct id after the full animation completes (~1400ms total)",
+        "Overlay has position: fixed, inset: 0, pointer-events: none, and a high z-index so it never blocks UI interaction",
+        "Multiple emojis can be in flight simultaneously without interfering with each other",
+        "Unit test: given a FlyingEmoji entry, the emoji text renders in the DOM",
+        "Unit test: onRemove is called with the correct id after animation duration (use vi.useFakeTimers())",
+        "Unit test: two simultaneous emojis both render and both call onRemove independently",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "Can be implemented in parallel with US-001 — no dependency between them"
+    },
+    {
+      "id": "US-003",
+      "title": "Wire reactions to flying animations (useFlyingEmojis + ref map)",
+      "description": "As a session participant, I want every new incoming reaction to trigger a flying emoji animation visible to all users in the session.",
+      "acceptanceCriteria": [
+        "SessionView maintains a Map<participantId, HTMLElement> (in a ref); ParticipantList receives a registration callback and each participant row registers its name element on mount and deregisters on unmount",
+        "Create useFlyingEmojis hook that watches session.participants for new reaction IDs (by diffing against a ref of previously-seen IDs); when a new reaction is found, gets the target element's getBoundingClientRect(), computes a random start position distributed evenly across all four screen edges, and adds a FlyingEmoji entry to state",
+        "FlyingEmojiOverlay is rendered inside SessionView (not at App level)",
+        "ReactionDisplay component is removed — no bounce animation remains next to participant names",
+        "Clicking an emoji in the picker triggers a flying animation visible to the local user",
+        "Remote participants also see the flying animation when a reaction is broadcast via WebSocket",
+        "Multiple reactions sent in quick succession each produce independent in-flight emojis",
+        "Participant name refs are cleaned up when a participant leaves the session",
+        "Unit test: new reaction on a participant triggers launch callback with correct emoji and toUserId",
+        "Unit test: a reaction already in the seen-IDs set does not trigger a duplicate launch",
+        "Typecheck passes",
+        "Tests pass",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Depends on US-002 (FlyingEmojiOverlay must exist). US-001 can be merged independently before this runs."
+    }
+  ]
+}
